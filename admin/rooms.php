@@ -7,38 +7,54 @@ $success = '';
 
 // Handle create/update room
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['action']) && $_POST['action'] === 'add') {
+    // Verify CSRF token
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verify_csrf_token($csrf_token)) {
+        $error = 'Security validation failed. Please try again.';
+    } elseif (isset($_POST['action']) && $_POST['action'] === 'add') {
         $room_number = trim($_POST['room_number'] ?? '');
         $room_type = trim($_POST['room_type'] ?? '');
-        $price = $_POST['price'] ?? '';
-        $capacity = $_POST['capacity'] ?? '';
+        $price = isset($_POST['price']) ? (float)$_POST['price'] : 0;
+        $capacity = isset($_POST['capacity']) ? (int)$_POST['capacity'] : 0;
         $status = $_POST['status'] ?? 'available';
         
-        if (empty($room_number) || empty($room_type) || empty($price) || empty($capacity)) {
-            $error = 'Please fill in all required fields.';
+        if (empty($room_number) || empty($room_type) || $price <= 0 || $capacity <= 0) {
+            $error = 'Please fill in all required fields with valid values (price and capacity must be positive).';
+        } elseif (!in_array($status, ['available', 'occupied', 'cleaning'])) {
+            $error = 'Invalid status value.';
         } else {
             try {
-                $stmt = $pdo->prepare("
-                    INSERT INTO rooms (room_number, room_type, price, capacity, status)
-                    VALUES (?, ?, ?, ?, ?)
-                ");
-                $stmt->execute([$room_number, $room_type, $price, $capacity, $status]);
-                $_SESSION['flash_msg'] = 'Room added successfully!';
-                $_SESSION['flash_type'] = 'success';
-                redirect_to('admin/rooms.php');
+                // Check for duplicate room number
+                $check_stmt = $pdo->prepare("SELECT COUNT(*) FROM rooms WHERE room_number = ?");
+                $check_stmt->execute([$room_number]);
+                if ($check_stmt->fetchColumn() > 0) {
+                    $error = 'A room with this number already exists.';
+                } else {
+                    $stmt = $pdo->prepare("
+                        INSERT INTO rooms (room_number, room_type, price, capacity, status)
+                        VALUES (?, ?, ?, ?, ?)
+                    ");
+                    $stmt->execute([$room_number, htmlspecialchars($room_type), $price, $capacity, $status]);
+                    set_flash('success', 'Room added successfully!');
+                    redirect_to('admin/rooms.php');
+                }
             } catch (Exception $e) {
-                $error = 'Error adding room: ' . $e->getMessage();
+                $error = 'Error adding room. Please try again.';
             }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'update') {
-        $room_id = $_POST['room_id'] ?? '';
+        $room_id = isset($_POST['room_id']) ? (int)$_POST['room_id'] : 0;
         $room_type = trim($_POST['room_type'] ?? '');
-        $price = $_POST['price'] ?? '';
-        $capacity = $_POST['capacity'] ?? '';
+        $price = isset($_POST['price']) ? (float)$_POST['price'] : 0;
+        $capacity = isset($_POST['capacity']) ? (int)$_POST['capacity'] : 0;
         $status = $_POST['status'] ?? 'available';
         
-        if (empty($room_id)) {
+        if ($room_id <= 0) {
             $error = 'Invalid room ID.';
+        } elseif (empty($room_type) || $price <= 0 || $capacity <= 0) {
+            $error = 'Please fill in all required fields with valid values (price and capacity must be positive).';
+        } elseif (!in_array($status, ['available', 'occupied', 'cleaning'])) {
+            $error = 'Invalid status value.';
         } else {
             try {
                 $stmt = $pdo->prepare("
@@ -46,24 +62,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     SET room_type = ?, price = ?, capacity = ?, status = ?
                     WHERE room_id = ?
                 ");
-                $stmt->execute([$room_type, $price, $capacity, $status, $room_id]);
-                $_SESSION['flash_msg'] = 'Room updated successfully!';
-                $_SESSION['flash_type'] = 'success';
+                $stmt->execute([htmlspecialchars($room_type), $price, $capacity, $status, $room_id]);
+                set_flash('success', 'Room updated successfully!');
                 redirect_to('admin/rooms.php');
             } catch (Exception $e) {
                 $error = 'Error updating room.';
             }
         }
     } elseif (isset($_POST['action']) && $_POST['action'] === 'delete') {
-        $room_id = $_POST['room_id'] ?? '';
-        try {
-            $stmt = $pdo->prepare("DELETE FROM rooms WHERE room_id = ?");
-            $stmt->execute([$room_id]);
-            $_SESSION['flash_msg'] = 'Room deleted successfully!';
-            $_SESSION['flash_type'] = 'success';
-            redirect_to('admin/rooms.php');
-        } catch (Exception $e) {
-            $error = 'Error deleting room.';
+        $room_id = isset($_POST['room_id']) ? (int)$_POST['room_id'] : 0;
+        if ($room_id <= 0) {
+            $error = 'Invalid room ID.';
+        } else {
+            try {
+                $stmt = $pdo->prepare("DELETE FROM rooms WHERE room_id = ?");
+                $stmt->execute([$room_id]);
+                set_flash('success', 'Room deleted successfully!');
+                redirect_to('admin/rooms.php');
+            } catch (Exception $e) {
+                $error = 'Error deleting room.';
+            }
         }
     }
 }
@@ -104,6 +122,7 @@ $room_types = ['Single', 'Double', 'Deluxe', 'Suite'];
             <div class="card" style="margin-bottom: 2rem;">
                 <h3>Add New Room</h3>
                 <form method="POST" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
                     <input type="hidden" name="action" value="add">
                     <div class="form-group" style="margin-bottom: 0;">
                         <input type="text" name="room_number" placeholder="Room Number" required>
@@ -181,6 +200,7 @@ $room_types = ['Single', 'Double', 'Deluxe', 'Suite'];
                 <button class="modal-close" onclick="hideModal('editModal')">✕</button>
             </div>
             <form method="POST">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
                 <input type="hidden" name="action" value="update">
                 <input type="hidden" name="room_id" id="edit_room_id">
                 

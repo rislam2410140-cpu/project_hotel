@@ -24,66 +24,70 @@ try {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $check_in = trim($_POST['check_in_date'] ?? '');
-    $check_out = trim($_POST['check_out_date'] ?? '');
-    
-    if (empty($check_in) || empty($check_out)) {
-        $error = 'Please select both check-in and check-out dates.';
+    // Verify CSRF token
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!verify_csrf_token($csrf_token)) {
+        $error = 'Security validation failed. Please try again.';
     } else {
-        $check_in_obj = DateTime::createFromFormat('Y-m-d', $check_in);
-        $check_out_obj = DateTime::createFromFormat('Y-m-d', $check_out);
-        $today = new DateTime('today');
+        $check_in = trim($_POST['check_in_date'] ?? '');
+        $check_out = trim($_POST['check_out_date'] ?? '');
         
-        if (!$check_in_obj || !$check_out_obj) {
-            $error = 'Invalid date format.';
-        } elseif ($check_in_obj <= $today) {
-            $error = 'Check-in date must be in the future.';
-        } elseif ($check_out_obj <= $check_in_obj) {
-            $error = 'Check-out date must be after check-in date.';
+        if (empty($check_in) || empty($check_out)) {
+            $error = 'Please select both check-in and check-out dates.';
         } else {
-            try {
-                // Check for overlapping bookings
-                $stmt = $pdo->prepare("
-                    SELECT COUNT(*) as count FROM bookings 
-                    WHERE room_id = ? 
-                    AND status IN ('pending', 'confirmed', 'checked_in')
-                    AND ((check_in_date < ? AND check_out_date > ?) 
-                         OR (check_in_date < ? AND check_out_date > ?))
-                ");
-                $stmt->execute([$room_id, $check_out, $check_in, $check_out, $check_in]);
-                $overlap = $stmt->fetch()['count'];
-                
-                if ($overlap > 0) {
-                    $error = 'This room is already booked for these dates. Please select different dates.';
-                } else {
-                    // Calculate total price (use dynamic price if available)
-                    $nights = $check_in_obj->diff($check_out_obj)->days;
-                    $room_price = $room['current_dynamic_price'] ?? $room['price'];
-                    $total_price = $nights * $room_price;
-                    
-                    // Create booking
+            $check_in_obj = DateTime::createFromFormat('Y-m-d', $check_in);
+            $check_out_obj = DateTime::createFromFormat('Y-m-d', $check_out);
+            $today = new DateTime('now');
+            
+            if (!$check_in_obj || !$check_out_obj) {
+                $error = 'Invalid date format.';
+            } elseif ($check_in_obj <= $today) {
+                $error = 'Check-in date must be in the future.';
+            } elseif ($check_out_obj <= $check_in_obj) {
+                $error = 'Check-out date must be after check-in date.';
+            } else {
+                try {
+                    // Check for overlapping bookings
                     $stmt = $pdo->prepare("
-                        INSERT INTO bookings (user_id, room_id, check_in_date, check_out_date, total_price, status)
-                        VALUES (?, ?, ?, ?, ?, 'pending')
+                        SELECT COUNT(*) as count FROM bookings 
+                        WHERE room_id = ? 
+                        AND status IN ('pending', 'confirmed', 'checked_in')
+                        AND ((check_in_date < ? AND check_out_date > ?) 
+                             OR (check_in_date < ? AND check_out_date > ?))
                     ");
-                    $stmt->execute([$_SESSION['user_id'], $room_id, $check_in, $check_out, $total_price]);
+                    $stmt->execute([$room_id, $check_out, $check_in, $check_out, $check_in]);
+                    $overlap = $stmt->fetch()['count'];
                     
-                    $booking_id = $pdo->lastInsertId();
-                    
-                    // Create payment record
-                    $stmt = $pdo->prepare("
-                        INSERT INTO payments (booking_id, amount, method, payment_status)
-                        VALUES (?, ?, 'cash', 'pending')
-                    ");
-                    $stmt->execute([$booking_id, $total_price]);
-                    
-                    $_SESSION['flash_msg'] = 'Booking created successfully! Please review and confirm.';
-                    $_SESSION['flash_type'] = 'success';
-                    
-                    redirect_to('guest/my_bookings.php');
+                    if ($overlap > 0) {
+                        $error = 'This room is already booked for these dates. Please select different dates.';
+                    } else {
+                        // Calculate total price (use dynamic price if available)
+                        $nights = $check_in_obj->diff($check_out_obj)->days;
+                        $room_price = $room['current_dynamic_price'] ?? $room['price'];
+                        $total_price = round($nights * (float)$room_price, 2);
+                        
+                        // Create booking
+                        $stmt = $pdo->prepare("
+                            INSERT INTO bookings (user_id, room_id, check_in_date, check_out_date, total_price, status)
+                            VALUES (?, ?, ?, ?, ?, 'pending')
+                        ");
+                        $stmt->execute([$_SESSION['user_id'], $room_id, $check_in, $check_out, $total_price]);
+                        
+                        $booking_id = $pdo->lastInsertId();
+                        
+                        // Create payment record
+                        $stmt = $pdo->prepare("
+                            INSERT INTO payments (booking_id, amount, method, payment_status)
+                            VALUES (?, ?, 'cash', 'pending')
+                        ");
+                        $stmt->execute([$booking_id, $total_price]);
+                        
+                        set_flash('success', 'Booking created successfully! Please review and confirm.');
+                        redirect_to('guest/my_bookings.php');
+                    }
+                } catch (Exception $e) {
+                    $error = 'Booking failed. Please try again.';
                 }
-            } catch (Exception $e) {
-                $error = 'Booking failed. Please try again.';
             }
         }
     }
@@ -139,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <?php endif; ?>
 
                         <form method="POST" action="">
+                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
                             <div class="form-group">
                                 <label>Check-in Date *</label>
                                 <input type="date" name="check_in_date" id="check_in" required min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>">

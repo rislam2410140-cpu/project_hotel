@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS pricing_history (
 
 -- Add current_dynamic_price column to rooms table for caching
 ALTER TABLE rooms ADD COLUMN IF NOT EXISTS current_dynamic_price DECIMAL(10, 2);
-ALTER TABLE rooms ADD COLUMN IF NOT EXISTS last_price_update TIMESTAMP;
+ALTER TABLE rooms ADD COLUMN IF NOT EXISTS last_price_update TIMESTAMP NULL;
 
 -- Initialize base prices from existing room prices
 INSERT INTO base_room_prices (room_id, base_price, effective_from)

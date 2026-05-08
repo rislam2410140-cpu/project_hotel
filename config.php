@@ -60,12 +60,23 @@ define('SITE_DESC', 'Experience luxury and comfort at our 5-star hotel');
 
 // Error Reporting
 error_reporting(E_ALL);
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+ini_set('error_log', __DIR__ . '/logs/error.log');
 
 // Session Configuration
 ini_set('session.use_only_cookies', 1);
 ini_set('session.cookie_httponly', 1);
+ini_set('session.cookie_samesite', 'Strict');
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+    ini_set('session.cookie_secure', 1);
+}
 session_start();
+
+// CSRF Token generation
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
 function app_url(string $path = ''): string {
     $normalized = ltrim($path, '/');
@@ -124,5 +135,13 @@ function get_status_color(string $status): string {
     ];
 
     return $colors[$status] ?? 'bg-gray-100 text-gray-800';
+}
+
+function csrf_token(): string {
+    return $_SESSION['csrf_token'] ?? '';
+}
+
+function verify_csrf_token(string $token): bool {
+    return hash_equals($_SESSION['csrf_token'] ?? '', $token);
 }
 ?>

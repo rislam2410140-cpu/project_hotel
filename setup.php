@@ -7,6 +7,25 @@
 
 require_once __DIR__ . '/config.php';
 
+// Check if database is already initialized - prevent re-setup
+try {
+    $pdo = new PDO(
+        'mysql:host=' . DB_HOST . ';dbname=' . DB_NAME . ';charset=' . DB_CHARSET,
+        DB_USER,
+        DB_PASS
+    );
+    $stmt = $pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '" . DB_NAME . "'");
+    $tableCount = $stmt->fetchColumn();
+    
+    if ($tableCount >= 6) {
+        // Database already has tables - setup complete
+        set_flash('info', 'Database is already initialized. Redirecting to home page.');
+        redirect_to('index.php');
+    }
+} catch (Exception $e) {
+    // Database doesn't exist yet - proceed with setup
+}
+
 // Show setup form
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 ?>
