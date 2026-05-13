@@ -1,13 +1,17 @@
 <?php
-require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/../database/db_connect.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/database/db_connect.php';
 
 $error = '';
 $success = '';
 
 // Redirect if already logged in
-if (isset($_SESSION['user_id']) && $_SESSION['role'] === 'guest') {
-    redirect_to('guest/dashboard.php');
+if (isset($_SESSION['user_id'])) {
+    if ($_SESSION['role'] === 'guest') {
+        redirect_to('guest/dashboard.php');
+    } elseif ($_SESSION['role'] === 'admin') {
+        redirect_to('admin/dashboard.php');
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -18,17 +22,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Please fill in all fields.';
     } else {
         try {
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ? AND role = 'guest'");
+            // Query without role constraint - let the database tell us the user's role
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = ?");
             $stmt->execute([$email]);
             $user = $stmt->fetch();
 
             if ($user && password_verify($password, $user['password_hash'])) {
+                // Set session variables including detected role
                 $_SESSION['user_id'] = $user['user_id'];
                 $_SESSION['name'] = $user['name'];
                 $_SESSION['email'] = $user['email'];
                 $_SESSION['role'] = $user['role'];
                 
-                redirect_to('guest/dashboard.php');
+                // Route to appropriate dashboard based on detected role
+                if ($user['role'] === 'guest') {
+                    redirect_to('guest/dashboard.php');
+                } elseif ($user['role'] === 'admin') {
+                    redirect_to('admin/dashboard.php');
+                }
             } else {
                 $error = 'Invalid email or password.';
             }
@@ -43,18 +54,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guest Login - <?php echo SITE_NAME; ?></title>
+    <title>Login - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="<?php echo app_url('assets/style.css'); ?>">
     <script src="<?php echo app_url('assets/dark_mode.js'); ?>"></script>
 </head>
 <body>
-    <?php require_once __DIR__ . '/../includes/header.php'; ?>
+    <?php require_once __DIR__ . '/includes/header.php'; ?>
 
     <section class="section">
         <div class="container">
             <div style="max-width: 400px; margin: 0 auto;">
                 <div class="card">
-                    <h2 style="text-align: center; margin-bottom: 2rem;">Guest Login</h2>
+                    <h2 style="text-align: center; margin-bottom: 2rem;">Login to Your Account</h2>
 
                     <?php if ($error): ?>
                         <div class="flash-message flash-error">
@@ -79,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </p>
 
                     <p style="text-align: center; margin-top: 1rem; color: var(--text-light); font-size: 0.9rem;">
-                        Demo: guest@hotel.com / Guest123
+                        Demo: guest@hotel.com / Guest123 or admin@hotel.com / Admin123
                     </p>
 
                     <hr style="margin: 1.5rem 0; border: none; border-top: 1px solid var(--border);">
@@ -92,6 +103,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </section>
 
-    <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+    <?php require_once __DIR__ . '/includes/footer.php'; ?>
 </body>
 </html>

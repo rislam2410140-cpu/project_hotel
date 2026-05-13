@@ -9,6 +9,7 @@ require_once __DIR__ . '/database/db_connect.php';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo SITE_NAME; ?> - Premium Hotel Experience</title>
     <link rel="stylesheet" href="<?php echo app_url('assets/style.css'); ?>">
+    <script src="<?php echo app_url('assets/dark_mode.js'); ?>"></script>
 </head>
 <body>
     <?php require_once __DIR__ . '/includes/header.php'; ?>
@@ -19,8 +20,7 @@ require_once __DIR__ . '/database/db_connect.php';
         <p>Experience luxury, comfort, and exceptional service</p>
         <div class="hero-buttons">
             <a href="<?php echo app_url('public/rooms.php'); ?>" class="btn btn-primary">Browse Rooms</a>
-            <a href="<?php echo app_url('guest/login.php'); ?>" class="btn btn-primary" style="background: white; color: var(--primary);">Guest Login</a>
-            <a href="<?php echo app_url('admin/login.php'); ?>" class="btn btn-primary" style="background: rgba(255,255,255,0.2);">Admin Panel</a>
+            <a href="<?php echo app_url('login.php'); ?>" class="btn btn-primary" style="background: white; color: var(--primary);">Login</a>
         </div>
     </section>
 

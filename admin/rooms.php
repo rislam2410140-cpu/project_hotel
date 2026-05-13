@@ -103,6 +103,7 @@ $room_types = ['Single', 'Double', 'Deluxe', 'Suite'];
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Rooms - Admin - <?php echo SITE_NAME; ?></title>
     <link rel="stylesheet" href="<?php echo app_url('assets/style.css'); ?>">
+    <script src="<?php echo app_url('assets/dark_mode.js'); ?>"></script>
 </head>
 <body>
     <?php require_once __DIR__ . '/../includes/header.php'; ?>

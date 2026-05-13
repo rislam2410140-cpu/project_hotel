@@ -26,6 +26,7 @@ $user_name = $_SESSION['name'] ?? null;
             <?php endif; ?>
         </nav>
         <div class="user-menu">
+            <button id="theme-toggle" aria-label="Toggle dark mode" aria-pressed="false"></button>
             <?php if ($role): ?>
                 <span>👤 <?php echo htmlspecialchars($user_name); ?></span>
                 <?php if ($role === 'guest'): ?>
@@ -34,8 +35,7 @@ $user_name = $_SESSION['name'] ?? null;
                     <a href="<?php echo app_url('admin/logout.php'); ?>" class="btn-logout">Logout</a>
                 <?php endif; ?>
             <?php else: ?>
-                <a href="<?php echo app_url('guest/login.php'); ?>" class="btn btn-primary btn-sm">Guest Login</a>
-                <a href="<?php echo app_url('admin/login.php'); ?>" class="btn btn-secondary btn-sm">Admin</a>
+                <a href="<?php echo app_url('login.php'); ?>" class="btn btn-primary btn-sm">Login</a>
             <?php endif; ?>
         </div>
     </div>

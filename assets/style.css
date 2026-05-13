@@ -28,7 +28,7 @@
     --danger: #ef4444;
     --danger-light: #f87171;
     
-    /* Neutrals with enhanced hierarchy */
+    /* Neutrals with enhanced hierarchy (Light Mode) */
     --dark: #1f2937;
     --dark-light: #374151;
     --light: #f9fafb;
@@ -38,6 +38,8 @@
     --text: #374151;
     --text-light: #6b7280;
     --text-lighter: #9ca3af;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
     
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
@@ -1168,4 +1170,180 @@ tbody tr:last-child td {
         padding: 0.75rem;
         font-size: 0.9rem;
     }
+}
+
+/* =========================================
+   Dark Mode Theme
+   ========================================= */
+
+html.dark-mode {
+    /* Background Colors */
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    
+    /* Text Colors */
+    --text: #f3f4f6;
+    --text-light: #d1d5db;
+    --text-lighter: #9ca3af;
+    
+    /* Border Colors */
+    --border: #374151;
+    --border-light: #1f2937;
+    
+    /* Status Colors (slightly adjusted for dark backgrounds) */
+    --success: #10b981;
+    --success-light: #6ee7b7;
+    --warning: #fbbf24;
+    --warning-light: #fcd34d;
+    --danger: #f87171;
+    --danger-light: #fca5a5;
+    
+    /* Light Colors (invert) */
+    --light: #374151;
+    --light-hover: #1f2937;
+    --dark: #f9fafb;
+    --dark-light: #e5e7eb;
+}
+
+/* Apply dark mode to body and its elements */
+html.dark-mode,
+html.dark-mode body {
+    background-color: var(--bg-secondary);
+    color: var(--text);
+}
+
+html.dark-mode body {
+    background-color: var(--bg-secondary);
+}
+
+html.dark-mode header {
+    background-color: var(--bg-primary);
+    border-bottom-color: var(--border);
+}
+
+html.dark-mode .card,
+html.dark-mode .modal-content {
+    background-color: var(--bg-primary);
+    border-color: var(--border);
+}
+
+html.dark-mode .section {
+    background-color: var(--bg-secondary);
+}
+
+html.dark-mode .section[style*="light"] {
+    background-color: var(--bg-primary) !important;
+}
+
+html.dark-mode table {
+    background-color: var(--bg-primary);
+    color: var(--text);
+}
+
+html.dark-mode th {
+    background-color: var(--bg-secondary);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+html.dark-mode td {
+    border-color: var(--border);
+}
+
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea {
+    background-color: var(--bg-secondary);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder {
+    color: var(--text-lighter);
+}
+
+html.dark-mode .form-group label {
+    color: var(--text);
+}
+
+html.dark-mode .flash-message {
+    background-color: var(--bg-primary);
+    border-left-color: var(--primary);
+}
+
+html.dark-mode .btn-secondary {
+    background-color: var(--bg-primary);
+    color: var(--text);
+    border-color: var(--border);
+}
+
+html.dark-mode .btn-secondary:hover {
+    background-color: var(--light);
+    color: var(--text);
+}
+
+html.dark-mode footer {
+    background-color: var(--bg-primary);
+    border-top-color: var(--border);
+    color: var(--text);
+}
+
+html.dark-mode .page-wrapper {
+    background-color: var(--bg-secondary);
+}
+
+html.dark-mode hr {
+    border-color: var(--border);
+}
+
+html.dark-mode a {
+    color: var(--primary-light);
+}
+
+html.dark-mode a:hover {
+    color: var(--primary);
+}
+
+/* Theme Toggle Button */
+#theme-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5rem;
+    padding: 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: var(--text);
+}
+
+#theme-toggle:hover {
+    background-color: var(--light);
+    transform: scale(1.1);
+}
+
+#theme-toggle::before {
+    content: '🌙';
+    font-size: 1.25rem;
+    transition: opacity 0.3s ease;
+}
+
+html.dark-mode #theme-toggle::before {
+    content: '☀️';
+}
+
+/* Smooth transitions for theme changes */
+html,
+html body,
+html header,
+html .card,
+html input,
+html select,
+html textarea,
+html .btn,
+html footer {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
