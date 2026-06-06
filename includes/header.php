@@ -17,6 +17,7 @@ $user_name = $_SESSION['name'] ?? null;
                 <a href="<?php echo app_url('admin/rooms.php'); ?>" class="<?php echo $current_page === 'rooms.php' ? 'active' : ''; ?>">Rooms</a>
                 <a href="<?php echo app_url('admin/bookings.php'); ?>" class="<?php echo $current_page === 'bookings.php' ? 'active' : ''; ?>">Bookings</a>
                 <a href="<?php echo app_url('admin/users.php'); ?>" class="<?php echo $current_page === 'users.php' ? 'active' : ''; ?>">Users</a>
+                <a href="<?php echo app_url('admin/password_reset_log.php'); ?>" class="<?php echo $current_page === 'password_reset_log.php' ? 'active' : ''; ?>">Resets</a>
                 <a href="<?php echo app_url('admin/reports.php'); ?>" class="<?php echo $current_page === 'reports.php' ? 'active' : ''; ?>">Reports</a>
             <?php else: ?>
                 <a href="<?php echo app_url('index.php'); ?>" class="<?php echo $current_page === 'index.php' ? 'active' : ''; ?>">Home</a>
