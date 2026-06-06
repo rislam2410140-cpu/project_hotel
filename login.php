@@ -79,7 +79,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" name="email" required>
                         </div>
                         <div class="form-group">
-                            <label>Password</label>
+                            <label style="display: flex; justify-content: space-between; align-items: center;">
+                                <span>Password</span>
+                                <a href="<?php echo app_url('forgot_password.php'); ?>" style="font-size: 0.85rem; font-weight: 500;">Forgot password?</a>
+                            </label>
                             <input type="password" name="password" required>
                         </div>
                         <button type="submit" class="btn btn-primary btn-block">Login</button>
