@@ -95,8 +95,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                                         <td><strong>$<?php echo number_format($booking['price'], 2); ?></strong></td>
                                         <td><span class="badge badge-<?php echo $booking['status']; ?>"><?php echo ucfirst(str_replace('_', ' ', $booking['status'])); ?></span></td>
                                         <td><span class="badge badge-<?php echo $booking['payment_status']; ?>"><?php echo ucfirst($booking['payment_status']); ?></span></td>
-                                        <td style="min-width: 200px;">
+                                        <td style="min-width: 250px;">
                                             <?php if ($booking['status'] === 'pending' || $booking['status'] === 'confirmed'): ?>
+                                                <?php if ($booking['payment_status'] === 'pending' || $booking['payment_status'] === null): ?>
+                                                    <a href="<?php echo app_url('guest/payment.php'); ?>?booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-success btn-sm" style="margin-right: 0.5rem;">Pay Now</a>
+                                                <?php endif; ?>
                                                 <form method="POST" onsubmit="return confirm('Cancel this booking?');" style="display: inline;">
                                                     <input type="hidden" name="action" value="cancel">
                                                     <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
